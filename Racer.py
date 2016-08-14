@@ -1,6 +1,8 @@
 import pygame, sys, random, math, time
 from pygame.locals import *
 
+print("Welcome to PythonRacer")
+
 pygame.init()
 width = 700
 height = 700
@@ -129,12 +131,14 @@ class Animation:
             self.y -= self.stepsize 
             self.yoffset = 0
             self.xoffset = self.lateralvariation
-            self.laps +=1
-            # Reset points after 3 laps
-            # if self.laps > 2:
-            # self.points = [ self.points[-1]]
             if self.y < 10:
                 self.direction = 'right'
+                self.laps +=1
+                # Reset points after 2 laps
+                if self.laps > 1:
+                    self.points = [ self.points[-1] ]
+                    self.laps = 0
+
     #no AA, no transparancy, normal
     ren = font.render(self.title, 1, self.titlecolor)
     DISPLAYSURF.blit(self.image, (self.x+self.xoffset, self.y+self.yoffset))
