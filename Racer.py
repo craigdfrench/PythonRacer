@@ -10,7 +10,7 @@ height = 700
 font = pygame.font.Font(None, 40)
 fg = 0,0,0
 bg = 5, 5, 5
-FPS = 30 # frames per second setting
+FPS = 60 # frames per second setting
 fpsClock = pygame.time.Clock()
 
 def rotate_3d_points(points, angle_x, angle_y, angle_z):
@@ -70,9 +70,7 @@ class RotatingCube:
 
     def move(self):
       self.count+=1
-      do_line_demo(DISPLAYSURF,self.count)
-        
-
+      do_line_demo(DISPLAYSURF,self.count)        
 
 class Animation:
    'Animation by Melanie and Lizzie'
@@ -81,6 +79,9 @@ class Animation:
       self.stepsize = random.randrange(-5,10)
       self.lateralvariationfrequency = random.randrange(5,15)/10.0;
       self.lateralvariationamplitude = random.randrange(15,30)
+      if (abs(self.stepsize)<=1):
+          self.swirls +=1
+      print(self.title+": Laps: "+str(self.laps)+", Swirls: "+str(self.swirls))
 
    def __init__(self, filename, title, titlecolor, x, y):
       self.image = pygame.transform.scale(pygame.image.load(filename),(150,150))
@@ -94,6 +95,7 @@ class Animation:
       self.xoffset = 0
       self.yoffset = 0
       self.count = 0
+      self.swirls = 0
       # Set up a list of all of the racers locations over every 3 laps of the race
       self.points = [(x,y)]
       Animation.changebehaviour(self)
@@ -135,9 +137,8 @@ class Animation:
                 self.direction = 'right'
                 self.laps +=1
                 # Reset points after 2 laps
-                if self.laps > 1:
+                if self.laps%3==2:
                     self.points = [ self.points[-1] ]
-                    self.laps = 0
 
     #no AA, no transparancy, normal
     ren = font.render(self.title, 1, self.titlecolor)
@@ -150,11 +151,118 @@ class Animation:
     
     # Draw points on screen
     pygame.draw.lines(DISPLAYSURF, self.titlecolor, 0, self.points, 2)
+    #draw_finish_line(DISPLAYSURF,(self.x+self.xoffset, self.y+self.yoffset, 200, 20),20,(0,0,0),(255,255,255))
+
+
+class FinishLine:
+   'Animation by Melanie and Lizzie'
+
+   def changebehaviour(self):
+      self.stepsize = random.randrange(2,4)
+      self.lateralvariationfrequency = random.randrange(5,15)/10.0;
+      self.lateralvariationamplitude = random.randrange(15,30)
+      #print("stepsize is "+str(self.stepsize))
+
+   def __init__(self,x,y,linewidth,lineheight,segments):
+      #self.image = pygame.transform.scale(pygame.image.load(filename),(150,150))
+      self.x = x
+      self.y = y
+      self.direction = 'right'
+      self.title = "Get ready"
+      self.titlecolor = (0,0,0)
+      self.laps = 0
+      self.lateralvariation = 0;
+      self.xoffset = 0
+      self.yoffset = 0
+      self.count = 0
+      self.linewidth = linewidth
+      self.lineheight = lineheight
+      self.height = 0
+      self.wide = 0
+      self.segments = segments
+      FinishLine.changebehaviour(self)
+          
+   def move(self):      
+    self.count+=1
+    if (self.count%360 == 0):
+        FinishLine.changebehaviour(self)
+
+    self.lateralvariation = self.lateralvariationamplitude*math.sin((3.141592653589793238462643383950288*2*self.lateralvariationfrequency*self.count)/FPS)        
+    if self.direction == 'right':
+        self.x += self.stepsize
+        self.yoffset = self.lateralvariation
+        self.xoffset = 0
+        self.width = self.lineheight
+        self.height = self.linewidth
+        if self.x > width - self.linewidth :
+            self.direction = 'down'
+    elif self.direction == 'down':
+        self.y += self.stepsize
+        self.yoffset = 0
+        self.xoffset = self.lateralvariation
+        self.width = self.linewidth
+        self.height = self.lineheight        
+        if self.y > height - self.linewidth:
+            self.direction = 'left'
+    elif self.direction == 'left':
+        self.x -= self.stepsize
+        self.xoffset = 0
+        self.yoffset = self.lateralvariation
+        self.width = self.lineheight
+        self.height = self.linewidth
+        if self.x < self.lineheight:
+            self.direction = 'up'
+    elif self.direction == 'up':
+        self.y -= self.stepsize 
+        self.yoffset = 0
+        self.xoffset = self.lateralvariation
+        self.width = self.linewidth
+        self.height = self.lineheight
+        if self.y < self.lineheight:
+            self.direction = 'right'
+            self.laps +=1
+            # Reset points after 2 laps
+            if self.laps > 1:
+                #self.points = [ self.points[-1] ]
+                self.laps = 0
+
+    #no AA, no transparancy, normal
+    ren = font.render(self.title, 1, self.titlecolor)
+    #DISPLAYSURF.blit(self.image, (self.x+self.xoffset, self.y+self.yoffset))
+    # 
+    #DISPLAYSURF.blit(ren, (self.x+self.xoffset+(self.image.get_width()-ren.get_width())/2, self.y+self.yoffset+self.image.get_height()))
+    # Find middle of image
+    # Insert point into points array
+    #self.points.append((self.x+self.xoffset+self.image.get_width()/2, self.y+self.yoffset+self.image.get_height()/2))
     
-   
+    # Draw points on screen
+    #pygame.draw.lines(DISPLAYSURF, self.titlecolor, 0, self.points, 2)
+    draw_finish_line(DISPLAYSURF,(self.x+self.xoffset, self.y+self.yoffset,self.width , self.height),self.segments,(0,0,0),(255,255,255))
+    
+def draw_finish_line(surface,position,segments,darkcolor,lightcolor):
+    pygame.draw.rect(surface,lightcolor,position)                
+              
+    if (position[2]>position[3]):
+        "Horizontal finish line"
+        down = 0
+        for axis in range(int(position[0]),int(position[0]+position[2]),int(position[2]/segments)):    
+            pygame.draw.rect(surface, darkcolor,(axis,position[1]+down*position[3]/2,position[2]/segments,position[3]/2))        
+            if (down==0):
+                down=1
+            else:
+                down=0
+    else:
+        "Vertical finish line"
+        down = 0
+        for axis in range(int(position[1]),int(position[1]+position[3]),int(position[3]/segments)):    
+            pygame.draw.rect(surface, darkcolor,(position[0]+down*position[2]/2,axis,position[2]/2,position[3]/segments))        
+            if (down==0):
+                down=1
+            else:
+                down=0
+            
 
-  
-
+    
 # set up the window
 DISPLAYSURF = pygame.display.set_mode((width, height), 0, 32)
 pygame.display.set_caption('Animation')
@@ -172,7 +280,7 @@ racers = []
 team(racers,'pi.PNG',(235,254,40),['3.1415926','5358979','323846264','338327950288'])
 team(racers,'rat.png',(80,255,200),['Toopy','Latte','Pinball','Snickers'])
 team(racers,'unicorn.png',(255, 0, 255),['Parker','Teddy Best','Positive Teddy'])
-
+racers.append(FinishLine(10,10,200,20,20))
 
 
 while True: # the main game loop
